@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="IJKVideoPlayer">
+        <!-- 滑动控制音量 (右边上下) 默认：true -->
+        <attr name="slidingVolume" format="boolean" />
+        <!-- 滑动控制亮度 (左边上下) 默认：true -->
+        <attr name="slidingBrightness" format="boolean" />
+        <!-- 滑动控制进度 (左右) 默认：true -->
+        <attr name="slidingProgress" format="boolean" />
+        <!-- 默认控制器是否可见 (播放、暂停、下一个、上一个、可拖动进度条及进度时间显示、返回、标题、设置菜单、全屏) 默认：true -->
+        <attr name="controllerVisibility" format="boolean" />
+    </declare-styleable>
+
+    <attr name="entrySummaries" format="reference" />
+
+    <declare-styleable name="IjkListPreference">
+        <attr name="entrySummaries" />
+    </declare-styleable>
+</resources>

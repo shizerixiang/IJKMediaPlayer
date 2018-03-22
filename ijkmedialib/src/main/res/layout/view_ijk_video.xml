@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 播放器本体 -->
+    <com.beviswang.ijkmedialib.media.IjkVideoView
+        android:id="@+id/ijkVideoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <!-- 播放器标题栏 -->
+    <RelativeLayout
+        android:id="@+id/ijkTitleBar"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_gravity="top"
+        android:background="#8333">
+
+        <!-- 返回按钮 -->
+        <ImageButton
+            android:id="@+id/ijkBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="@dimen/ijk_btn_spacing"
+            android:background="#8ff0"
+            android:contentDescription="@string/desc_ijk_back" />
+
+        <!-- 标题 -->
+        <TextView
+            android:id="@+id/ijkTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="@dimen/ijk_btn_spacing"
+            android:layout_toEndOf="@id/ijkBack"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:maxWidth="240dp"
+            android:text="@string/this_s_title_of_the_video"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            tools:ignore="RelativeOverlap" />
+
+        <!-- 设置菜单按钮 -->
+        <ImageButton
+            android:id="@+id/ijkMenu"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/ijk_btn_spacing"
+            android:background="#80f0"
+            android:contentDescription="@string/desc_ijk_menu" />
+
+    </RelativeLayout>
+
+    <!-- 播放器底部栏 -->
+    <RelativeLayout
+        android:id="@+id/ijkControlBar"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_gravity="bottom"
+        android:background="#8333">
+
+        <!-- 播放或暂停按钮 -->
+        <ImageButton
+            android:id="@+id/ijkPlayOrPause"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:layout_margin="@dimen/ijk_btn_spacing"
+            android:background="#8f0f"
+            android:contentDescription="@string/desc_ijk_play" />
+
+        <!-- 播放进度条 -->
+        <ProgressBar
+            android:id="@+id/ijkProgress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="18dp"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="2dp"
+            android:layout_toEndOf="@id/ijkPlayOrPause"
+            android:layout_toStartOf="@+id/ijkCurTime"
+            android:max="100"
+            android:progress="40" />
+
+        <!-- 当前播放进度时间 -->
+        <TextView
+            android:id="@+id/ijkCurTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/ijkDivision"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/txt_time" />
+
+        <!-- 进度时间分割线 -->
+        <TextView
+            android:id="@+id/ijkDivision"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/ijkCurTime"
+            android:layout_toStartOf="@+id/ijkTotalTime"
+            android:text="@string/txt_division"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/txt_time" />
+
+        <!-- 播放总进度时间 -->
+        <TextView
+            android:id="@+id/ijkTotalTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/ijkFullScreen"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/txt_time" />
+
+        <!-- 全屏播放按钮 -->
+        <ImageButton
+            android:id="@+id/ijkFullScreen"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_margin="@dimen/ijk_btn_spacing"
+            android:background="#889f"
+            android:contentDescription="@string/desc_ijk_full" />
+
+    </RelativeLayout>
+
+</FrameLayout>
