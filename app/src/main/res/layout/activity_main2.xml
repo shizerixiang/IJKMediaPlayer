@@ -12,6 +12,8 @@
         android:id="@+id/mInfoBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/ijkVideoView"
+        android:layout_margin="8dp"
         android:text="信息" />
 
 </RelativeLayout>

@@ -5,27 +5,11 @@
     android:layout_height="match_parent"
     tools:context="com.beviswang.ijkmediaplayer.MainActivity">
 
-    <SurfaceView
-        android:id="@+id/mSurfaceView"
-        android:layout_width="480dp"
-        android:layout_height="240dp"
-        android:layout_centerHorizontal="true" />
-
     <Button
-        android:id="@+id/mPlayButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/mSurfaceView"
-        android:layout_margin="24dp"
-        android:text="播放" />
-
-    <Button
-        android:id="@+id/mStopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_below="@id/mSurfaceView"
-        android:layout_margin="24dp"
-        android:text="暂停" />
+    android:id="@+id/mPlayButton"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="24dp"
+    android:text="播放" />
 
 </RelativeLayout>
