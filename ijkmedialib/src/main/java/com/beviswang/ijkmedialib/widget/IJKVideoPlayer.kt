@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Message
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -137,6 +136,8 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
     private fun updateProgress(cur: Int, total: Int) {
         ijkCurTimeTv?.text = ConvertHelper.getDisplayTimeByMsec(cur.toLong())
         ijkTotalTimeTv?.text = ConvertHelper.getDisplayTimeByMsec(total.toLong())
+        // 加载缓冲条
+        ijkProgressBar?.secondaryProgress = ((ijkVideoView?.bufferPercentage ?: 0) * duration) / 100
         if (isTouchProgress) return
         ijkProgressBar?.progress = cur
         ijkProgressBar?.max = total
