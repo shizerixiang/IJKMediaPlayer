@@ -3,8 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.beviswang.ijkmedialib.media.IjkVideoView
-        android:id="@+id/ijkVideoView"
+    <com.beviswang.ijkmedialib.widget.IJKVideoPlayer
+        android:id="@+id/IJK_video_player"
+        android:background="#e333"
         android:layout_width="match_parent"
         android:layout_height="200dp" />
 
@@ -12,6 +13,8 @@
         android:id="@+id/mInfoBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/IJK_video_player"
+        android:layout_margin="8dp"
         android:text="信息" />
 
 </RelativeLayout>

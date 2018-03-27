@@ -77,7 +77,7 @@
             android:contentDescription="@string/desc_ijk_play" />
 
         <!-- 播放进度条 -->
-        <ProgressBar
+        <SeekBar
             android:id="@+id/ijkProgress"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
@@ -85,9 +85,7 @@
             android:layout_centerVertical="true"
             android:layout_marginEnd="2dp"
             android:layout_toEndOf="@id/ijkPlayOrPause"
-            android:layout_toStartOf="@+id/ijkCurTime"
-            android:max="100"
-            android:progress="40" />
+            android:layout_toStartOf="@+id/ijkCurTime"/>
 
         <!-- 当前播放进度时间 -->
         <TextView
