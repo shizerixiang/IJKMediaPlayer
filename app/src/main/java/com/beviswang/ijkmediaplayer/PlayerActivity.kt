@@ -12,21 +12,22 @@ class PlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main2)
 
-        ijkVideoView.setVideoURI(Uri.parse("http://vod.cntv.lxdns.com/flash/mp4video61/TMS/2017/08/17/63bf8bcc706a46b58ee5c821edaee661_h264818000nero_aac32-5.mp4"))
-        ijkVideoView.start()
+        IJK_video_player.setDataSource(Uri.parse("http://vod.cntv.lxdns.com/flash/mp4video61/TMS/2017/08/17/63bf8bcc706a46b58ee5c821edaee661_h264818000nero_aac32-5.mp4"))
+        IJK_video_player.setVideoTitle("动物世界——兽王之路篇")
+        IJK_video_player.start()
 
-        mInfoBtn.onClick { ijkVideoView.showMediaInfo() }
+        mInfoBtn.onClick { IJK_video_player.showMediaInfo() }
     }
 
     override fun onResume() {
         super.onResume()
-        ijkVideoView.resume()
+        IJK_video_player.resume()
     }
 
     override fun onStop() {
         super.onStop()
-        ijkVideoView.stopPlayback()
-        ijkVideoView.release(true)
-        ijkVideoView.stopBackgroundPlay()
+        IJK_video_player.stopPlayback()
+        IJK_video_player.release(true)
+        IJK_video_player.stopBackgroundPlay()
     }
 }

@@ -19,4 +19,16 @@ interface IVideoPlayer : MediaController.MediaPlayerControl {
 
     /** @param uri 设置数据源地址 */
     fun setDataSource(uri: Uri)
+
+    /** 弹出媒体信息 */
+    fun showMediaInfo()
+
+    /** 启动播放 */
+    fun resume()
+
+    fun stopPlayback()
+
+    fun release(boolean: Boolean)
+
+    fun stopBackgroundPlay()
 }

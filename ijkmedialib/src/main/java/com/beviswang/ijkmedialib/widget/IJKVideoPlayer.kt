@@ -3,20 +3,27 @@ package com.beviswang.ijkmedialib.widget
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
+import android.os.Handler
+import android.os.Message
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
+import android.view.View
 import android.widget.*
 import com.beviswang.ijkmedialib.R
 import com.beviswang.ijkmedialib.media.IjkVideoView
+import com.beviswang.ijkmedialib.util.ConvertHelper
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
+import java.lang.ref.WeakReference
 
 /**
  * IjkMediaPlayer 播放器控件
  * Created by shize on 2018/3/21.
  */
 class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, def: Int = 0)
-    : FrameLayout(context, attrs, def), IVideoPlayer {
+    : FrameLayout(context, attrs, def), IVideoPlayer, SeekBar.OnSeekBarChangeListener {
+
     private var isSlidingVolume: Boolean // 是否开启滑动控制音量
     private var isSlidingBrightness: Boolean // 是否开启滑动控制亮度
     private var isSlidingProgress: Boolean // 是否开启滑动控制进度
@@ -29,10 +36,15 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
     private var ijkTitleTv: TextView? = null // 视频标题
     private var ijkMenuBtn: ImageButton? = null // 设置菜单按钮
     private var ijkPlayBtn: ImageButton? = null // 播放暂停按钮
-    private var ijkProgressBar: ProgressBar? = null // 播放进度条
+    private var ijkProgressBar: SeekBar? = null // 播放进度条
     private var ijkCurTimeTv: TextView? = null // 当前播放进度时间
     private var ijkTotalTimeTv: TextView? = null // 播放总进度时间
     private var ijkFullBtn: ImageButton? = null // 全屏播放按钮
+
+    private var seekProgress: Int = -1 // 手指滑动的进度
+    private var isTouchProgress: Boolean = false // 用户是否正在拖动进度条
+
+    private var mProgressHandler: ProgressHandler = ProgressHandler(this) // 进度更新Handler
 
     init {
         IjkMediaPlayer.loadLibrariesOnce(null)
@@ -48,31 +60,45 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
 
     override fun onFinishInflate() {
         super.onFinishInflate()
+        initController()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        return super.onTouchEvent(event)
+    }
+
+    // ********************************** 控制器参数 **********************************
+
+    /**
+     * 初始化控制器
+     */
+    private fun initController() {
         // 播放器
         ijkVideoView = findViewById(R.id.ijkVideoView)
 
         // 返回按钮
         ijkBackBtn = findViewById(R.id.ijkBack)
-        ijkBackBtn?.setOnClickListener { ijkListener?.onBackClick() }
+        ijkBackBtn?.setOnClickListener { v -> ijkListener?.onBackClick(v) }
 
         // 标题
         ijkTitleTv = findViewById(R.id.ijkTitle)
 
         // 菜单按钮
         ijkMenuBtn = findViewById(R.id.ijkMenu)
-        ijkMenuBtn?.setOnClickListener { ijkListener?.onMenuClick() }
+        ijkMenuBtn?.setOnClickListener { v -> ijkListener?.onMenuClick(v) }
 
         // 播放按钮
         ijkPlayBtn = findViewById(R.id.ijkPlayOrPause)
-        ijkPlayBtn?.setOnClickListener {
+        ijkPlayBtn?.setOnClickListener { v ->
             if (isPlaying) pause() else start()
-            ijkListener?.onPlayClick()
+            ijkListener?.onPlayClick(v)
         }
 
         // 进度条
         ijkProgressBar = findViewById(R.id.ijkProgress)
-        ijkProgressBar?.max = duration
-        ijkProgressBar?.progress = 0
+        ijkProgressBar?.setOnSeekBarChangeListener(this)
+        mProgressHandler.sendEmptyMessageDelayed(WHAT_PROGRESS_UPDATE, 1000)
 
         // 当前时间
         ijkCurTimeTv = findViewById(R.id.ijkCurTime)
@@ -85,17 +111,35 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
         ijkFullBtn = findViewById(R.id.ijkFullScreen)
     }
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        if (!fromUser) return
+        seekProgress = progress
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        isTouchProgress = true
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return super.onTouchEvent(event)
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        if (seekProgress == -1) return
+        ijkVideoView?.seekTo(seekProgress)
+        seekBar?.progress = seekProgress
+        seekProgress = -1
+        isTouchProgress = false
+    }
+
+    /**
+     * 更新当前进度及总进度
+     *
+     * @param cur 当前进度
+     * @param total 总进度
+     */
+    private fun updateProgress(cur: Int, total: Int) {
+        ijkCurTimeTv?.text = ConvertHelper.getDisplayTimeByMsec(cur.toLong())
+        ijkTotalTimeTv?.text = ConvertHelper.getDisplayTimeByMsec(total.toLong())
+        if (isTouchProgress) return
+        ijkProgressBar?.progress = cur
+        ijkProgressBar?.max = total
     }
 
     override fun setVideoTitle(title: String) {
@@ -104,6 +148,28 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
 
     override fun setPlayerClickListener(listener: PlayerClickListener) {
         ijkListener = listener
+    }
+
+    // ********************************** 播放器参数 **********************************
+
+    override fun showMediaInfo() {
+        ijkVideoView?.showMediaInfo()
+    }
+
+    override fun resume() {
+        ijkVideoView?.resume()
+    }
+
+    override fun stopPlayback() {
+        ijkVideoView?.stopPlayback()
+    }
+
+    override fun release(boolean: Boolean) {
+        ijkVideoView?.release(boolean)
+    }
+
+    override fun stopBackgroundPlay() {
+        ijkVideoView?.stopBackgroundPlay()
     }
 
     override fun setDataSource(path: String) {
@@ -158,20 +224,48 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
         return ijkVideoView?.audioSessionId ?: 0
     }
 
+    /**
+     * 控制器点击事件回调接口
+     */
     interface PlayerClickListener {
         /**
          * 返回按钮点击事件
          */
-        fun onBackClick()
+        fun onBackClick(view: View)
 
         /**
          * 设置菜单按钮点击事件
          */
-        fun onMenuClick()
+        fun onMenuClick(view: View)
 
         /**
          * 点击开始按钮事件
          */
-        fun onPlayClick()
+        fun onPlayClick(view: View)
+    }
+
+    /**
+     * 进度条更新 Handler
+     */
+    class ProgressHandler(ijkVideoPlayer: IJKVideoPlayer) : Handler() {
+        private val weakIjk = WeakReference<IJKVideoPlayer>(ijkVideoPlayer)
+
+        override fun handleMessage(msg: Message?) {
+            val ijkVideoPlayer = weakIjk.get() ?: return
+            when (msg?.what) {
+            // 进度更新
+                WHAT_PROGRESS_UPDATE -> {
+                    val cur = ijkVideoPlayer.currentPosition
+                    val total = ijkVideoPlayer.duration
+                    if (cur >= total) return
+                    ijkVideoPlayer.updateProgress(cur, total)
+                    sendEmptyMessageDelayed(WHAT_PROGRESS_UPDATE, 1000)
+                }
+            }
+        }
+    }
+
+    companion object {
+        val WHAT_PROGRESS_UPDATE = 0x01
     }
 }

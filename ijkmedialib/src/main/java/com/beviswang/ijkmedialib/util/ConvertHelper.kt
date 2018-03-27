@@ -16,8 +16,7 @@ object ConvertHelper {
     fun getDisplayTimeByMsec(timeValue: Long): String {
         // 将毫秒转化为秒
         val durationS = (timeValue / 1000).toInt()
-        return getTimeString(durationS / 3600) + ":" + getTimeString(durationS / 60 % 60) +
-                ":" + getTimeString(durationS % 60)
+        return getTimeString(durationS / 60) + ":" + getTimeString(durationS % 60)
     }
 
     /**
