@@ -9,7 +9,7 @@ import android.widget.MediaController
  */
 interface IVideoPlayer : MediaController.MediaPlayerControl {
     /** @param listener 设置播放器点击监听器 */
-    fun setPlayerClickListener(listener: IJKVideoPlayer.PlayerClickListener)
+    fun setControllerCallback(listener: IJKVideoPlayer.ControllerCallback)
 
     /** @param title 设置视频标题 */
     fun setVideoTitle(title: String)

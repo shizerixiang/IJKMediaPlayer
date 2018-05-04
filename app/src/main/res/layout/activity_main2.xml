@@ -7,7 +7,7 @@
         android:id="@+id/IJK_video_player"
         android:background="#e333"
         android:layout_width="match_parent"
-        android:layout_height="200dp" />
+        android:layout_height="240dp" />
 
     <Button
         android:id="@+id/mInfoBtn"

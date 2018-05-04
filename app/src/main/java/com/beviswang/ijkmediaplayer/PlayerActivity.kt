@@ -14,7 +14,6 @@ class PlayerActivity : AppCompatActivity() {
 
         IJK_video_player.setDataSource(Uri.parse("http://vod.cntv.lxdns.com/flash/mp4video61/TMS/2017/08/17/63bf8bcc706a46b58ee5c821edaee661_h264818000nero_aac32-5.mp4"))
         IJK_video_player.setVideoTitle("动物世界——兽王之路篇")
-        IJK_video_player.start()
 
         mInfoBtn.onClick { IJK_video_player.showMediaInfo() }
     }
