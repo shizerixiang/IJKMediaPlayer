@@ -3,6 +3,7 @@ package com.beviswang.ijkmedialib.widget
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.pm.ActivityInfo
 import android.media.AudioManager
 import android.net.Uri
 import android.os.Handler
@@ -18,7 +19,31 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer
 import java.lang.ref.WeakReference
 
 /**
- * IjkMediaPlayer 播放器控件
+ * IjkMediaPlayer 播放器控件，基于 ijkPlayer 开源项目
+ *
+ * 该类提供了可以在 XML 布局中使用 <IJKVideoPlayer /> 标签的功能，以下是使用实例：
+ * <com.beviswang.ijkmedialib.widget.IJKVideoPlayer
+ * android:id="@+id/IJK_video_player"
+ * android:background="#e333"
+ * android:layout_width="match_parent"
+ * android:layout_height="wrap_content" />
+ *
+ * 额外提供了参数设置及基本的控制器，但并不是全部功能，如果需要更详细的设置请关闭控制器，并自定义控制器：
+ * <!-- 滑动控制音量 (右边上下) 默认：true -->
+ * <attr name="slidingVolume" format="boolean" />
+ * <!-- 滑动控制亮度 (左边上下) 默认：true -->
+ * <attr name="slidingBrightness" format="boolean" />
+ * <!-- 滑动控制进度 (左右) 默认：true -->
+ * <attr name="slidingProgress" format="boolean" />
+ * <!-- 默认控制器是否可见 (播放、暂停、下一个、上一个、可拖动进度条及进度时间显示、返回、标题、设置菜单、全屏) 默认：true -->
+ * <attr name="controllerVisibility" format="boolean" />
+ *
+ * 注意：使用该控件需要声明权限
+ * <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+ * <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+ * <!-- 网络权限非必须，但如果需要用到网络请声明 -->
+ * <uses-permission android:name="android.permission.INTERNET" />
+ *
  * Created by shize on 2018/3/21.
  */
 class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, def: Int = 0)
@@ -27,7 +52,7 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
     private var ijkListener: ControllerCallback? = null                                                     // 播放状态监听器
     private var ijkGestureDetector: SlidingGestureDetector? = null                                          // 手势监听器
     private var audioManager: AudioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager// 音量管理
-    private val window = (context as Activity).window                                                       // 窗口，用于调节亮度
+    private val activity = context as Activity                                                              // activity
 
     private val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
     private var curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
@@ -58,12 +83,18 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
     private var isShowController: Boolean = false                   // 播放器的控制器是否为显示状态
     private var isShowVolumeBar: Boolean = false                    // 是否显示音量工具条
     private var isShowBrightnessBar: Boolean = false                // 是否显示亮度工具条
+    private var isFullScreen: Boolean = false                       // 是否全屏
 
     var autoHideDuration: Long = 5000L                              // 自动隐藏控制器间隔
 
     private var slideDistance: Float = 0f                           // 当前滑动的进度
     private var startPosition: Float = 0f                           // 起始位置
     private var slideDirection = SlidingGestureDetector.HORIZONTAL  // 滑动方向
+
+    private var recodeDistance: Float = 0f                          // 记录的距离，在没有达到触发值之前的记录值，触发的同时更新值
+
+    private var recodeHeight: Int = 0                               // 记录全屏前的高度
+    private var recodeWidth: Int = 0                                // 记录全屏前的宽度
 
     init {
         IjkMediaPlayer.loadLibrariesOnce(null)
@@ -85,34 +116,38 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        // 检测用户是否选择开启滑动调整参数
+        if (!isSlidingBrightness && !isSlidingVolume && !isSlidingProgress) return super.onTouchEvent(event)
         return ijkGestureDetector?.onTouchEvent(event) ?: super.onTouchEvent(event)
     }
 
     override fun onHorizontalSlide(distance: Float, hx: Float) {
+        if (!isSlidingProgress) return
         slideDirection = SlidingGestureDetector.HORIZONTAL
         slideDistance = distance
         startPosition = hx
     }
 
-    private var recodeDistance: Float = 0f           // 记录的距离，在没有达到触发值之前的记录值，触发的同时更新值
-
     override fun onVerticalSlide(distance: Float, vx: Float) {
+        if (!isSlidingBrightness && !isSlidingVolume) return
         slideDirection = SlidingGestureDetector.VERTICAL
         // 判断为第一次滑动，记录起始点Y轴坐标
         val moveDistance = distance - recodeDistance // 移动的距离
         if (vx > width / 2) {
+            if (!isSlidingVolume) return
             setVolume(moveDistance, distance)
         } else {
+            if (!isSlidingBrightness) return
             setBrightness(moveDistance, distance)
         }
     }
 
     override fun onRelease(e: MotionEvent?) {
-        if (isShowVolumeBar) {
+        if (isSlidingVolume && isShowVolumeBar) {
             isShowVolumeBar = false
             refreshVolumeBar()
         }
-        if (isShowBrightnessBar) {
+        if (isSlidingBrightness && isShowBrightnessBar) {
             isShowBrightnessBar = false
             refreshBrightnessBar()
         }
@@ -141,7 +176,7 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
 
     /** 增加亮度 */
     private fun addBrightness() {
-        var curBrightness = window.attributes.screenBrightness * 255f
+        var curBrightness = activity.window.attributes.screenBrightness * 255f
         curBrightness += 5
         if (curBrightness > 255) curBrightness = 255f
         // 调整音量
@@ -150,7 +185,7 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
 
     /** 减小亮度 */
     private fun subBrightness() {
-        var curBrightness = window.attributes.screenBrightness * 255f
+        var curBrightness = activity.window.attributes.screenBrightness * 255f
         curBrightness -= 5
         if (curBrightness < 0) curBrightness = 0f
         // 调整音量
@@ -173,9 +208,7 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
         }
     }
 
-    /**
-     * 增加音量
-     */
+    /** 增加音量 */
     private fun addVolume() {
         curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         curVolume += maxVolume / 15
@@ -184,9 +217,7 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
         updateVolumeProgress(curVolume)
     }
 
-    /**
-     * 减小音量
-     */
+    /** 减小音量 */
     private fun subVolume() {
         curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
         curVolume -= maxVolume / 15
@@ -195,9 +226,7 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
         updateVolumeProgress(curVolume)
     }
 
-    /**
-     * 水平更新值
-     */
+    /** 水平更新值 */
     private fun updateHorizontal() {
         var slideRatio = 0 - (slideDistance / width)
         if (startPosition - slideDistance < 0) slideRatio = 0f
@@ -231,11 +260,24 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
         ijkProgressBar?.setOnSeekBarChangeListener(this)
         mPlayerHandler.sendEmptyMessageDelayed(WHAT_PROGRESS_UPDATE, 1000)
         ijkBackBtn = findViewById(R.id.ijkBack)                         // 返回按钮
-        ijkBackBtn?.setOnClickListener { v -> handlerOperation(v, doSth = { view -> ijkListener?.onBackClick(view!!) }) }
+        ijkBackBtn?.setOnClickListener { v ->
+            handlerOperation(v, doSth = { view ->
+                if (isFullScreen) {
+                    cancelFullScreen()
+                    return@handlerOperation
+                }
+                ijkListener?.onBackClick(view!!)
+            })
+        }
         ijkMenuBtn = findViewById(R.id.ijkMenu)                         // 菜单按钮
         ijkMenuBtn?.setOnClickListener { v -> handlerOperation(v, doSth = { view -> ijkListener?.onMenuClick(view!!) }) }
         ijkFullBtn = findViewById(R.id.ijkFullScreen)                   // 全屏按钮
-        ijkFullBtn?.setOnClickListener { v -> handlerOperation(v, doSth = { view -> ijkListener?.onFullClick(view!!) }) }
+        ijkFullBtn?.setOnClickListener { v ->
+            handlerOperation(v, doSth = { view ->
+                ijkListener?.onFullClick(view!!)
+                setFullScreen()
+            })
+        }
         ijkPlayBtn = findViewById(R.id.ijkPlayOrPause)                  // 播放按钮
         ijkPlayBtn?.setOnClickListener { v ->
             onPlayButtonClick(v)
@@ -257,9 +299,42 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
      */
     private fun onPlayButtonClick(v: View?) {
         handlerOperation(v, doSth = { view ->
-            if (isPlaying) pause() else start()
-            ijkListener?.onPlayClick(view!!, isPlaying)
+            if (isPlaying) {
+                pause()
+                (view as ImageButton).setImageResource(R.drawable.ic_play)
+            } else {
+                start()
+                (view as ImageButton).setImageResource(R.drawable.ic_pause)
+            }
+            ijkListener?.onPlayClick(view, isPlaying)
         })
+    }
+
+    /** 设置全屏 */
+    private fun fullScreen() {
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        activity.window.setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        recodeHeight = height
+        recodeWidth = width
+        val lp = layoutParams
+        lp.height = LayoutParams.MATCH_PARENT
+        lp.width = LayoutParams.MATCH_PARENT
+        layoutParams = lp
+        isFullScreen = true
+    }
+
+    /** 取消全屏 */
+    private fun cancelFullScreen() {
+        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        activity.window.clearFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        val lp = layoutParams
+        lp.height = recodeHeight
+        lp.width = recodeWidth
+        layoutParams = lp
+        isFullScreen = false
     }
 
     /**
@@ -314,9 +389,9 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
     /** 更新音量进度条 */
     private fun updateBrightnessProgress(value: Float) {
         ijkBrightnessProgress?.progress = value.toInt()
-        val lp = window.attributes
+        val lp = activity.window.attributes
         lp.screenBrightness = value / 255f
-        window.attributes = lp
+        activity.window.attributes = lp
     }
 
     /** 更新音量进度条 */
@@ -365,6 +440,9 @@ class IJKVideoPlayer @JvmOverloads constructor(context: Context, attrs: Attribut
     }
 
     // ********************************** 播放器参数 **********************************
+
+    /** 设置全屏状态 */
+    override fun setFullScreen() = if (!isFullScreen) fullScreen() else cancelFullScreen()
 
     override fun showMediaInfo() {
         ijkVideoView?.showMediaInfo()

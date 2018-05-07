@@ -3,6 +3,10 @@ package com.beviswang.ijkmediaplayer
 import android.net.Uri
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.view.Window
+import android.view.WindowManager
+import com.beviswang.ijkmedialib.widget.IJKVideoPlayer
 import kotlinx.android.synthetic.main.activity_main2.*
 import org.jetbrains.anko.onClick
 
@@ -16,6 +20,22 @@ class PlayerActivity : AppCompatActivity() {
         IJK_video_player.setVideoTitle("动物世界——兽王之路篇")
 
         mInfoBtn.onClick { IJK_video_player.showMediaInfo() }
+
+        IJK_video_player.setControllerCallback(object :IJKVideoPlayer.ControllerCallback{
+            override fun onBackClick(view: View) {
+                finish()
+            }
+
+            override fun onMenuClick(view: View) {
+                IJK_video_player.showMediaInfo()
+            }
+
+            override fun onPlayClick(view: View, isPlaying: Boolean) {
+            }
+
+            override fun onFullClick(view: View) {
+            }
+        })
     }
 
     override fun onResume() {

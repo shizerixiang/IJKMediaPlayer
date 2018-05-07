@@ -8,6 +8,9 @@ import android.widget.MediaController
  * Created by shize on 2018/3/22.
  */
 interface IVideoPlayer : MediaController.MediaPlayerControl {
+    /** 设置全屏状态 */
+    fun setFullScreen()
+
     /** @param listener 设置播放器点击监听器 */
     fun setControllerCallback(listener: IJKVideoPlayer.ControllerCallback)
 
