@@ -1,1 +1,1 @@
-include  ':ijkmedialib'
+include ':app', ':ijkmedialib'
