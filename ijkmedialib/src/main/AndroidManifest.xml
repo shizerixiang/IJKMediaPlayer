@@ -1,2 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.beviswang.ijkmedialib" />
+    package="com.beviswang.ijkmedialib">
+
+    <application>
+        <service
+            android:name=".service.MiniWindowService"
+            android:enabled="true"
+            android:exported="true"
+            android:process=":aidl"/>
+    </application>
+
+</manifest>

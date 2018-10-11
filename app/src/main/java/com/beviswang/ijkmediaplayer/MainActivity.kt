@@ -19,7 +19,7 @@ class MainActivity : AppCompatActivity() {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.INTERNET)) initData() else
-            Toast.makeText(this, "请设置权限！", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "请确认权限！", Toast.LENGTH_SHORT).show()
         initData()
 
     }
